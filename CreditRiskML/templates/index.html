@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CreditRiskML — Kredi Risk Skoru</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #0b1220;
+      --bg-elev: #121b2e;
+      --bg-card: #162036;
+      --line: rgba(180, 205, 255, 0.12);
+      --text: #e8eefc;
+      --muted: #93a4c4;
+      --accent: #3ee0b0;
+      --accent-2: #7aa2ff;
+      --warn: #ffb020;
+      --danger: #ff5d73;
+      --ok: #3ee0b0;
+      --shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "IBM Plex Sans", system-ui, sans-serif;
+      background:
+        radial-gradient(1200px 600px at 10% -10%, rgba(58, 224, 176, 0.12), transparent 50%),
+        radial-gradient(900px 500px at 100% 0%, rgba(122, 162, 255, 0.14), transparent 45%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .wrap {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 20px 48px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 28px;
+    }
+
+    .brand {
+      display: flex;
+      gap: 14px;
+      align-items: center;
+    }
+
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(145deg, #3ee0b0, #2a8cff);
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+      color: #061018;
+      letter-spacing: -0.04em;
+    }
+
+    .brand h1 {
+      font-size: 1.25rem;
+      letter-spacing: -0.03em;
+    }
+
+    .brand p {
+      color: var(--muted);
+      font-size: 0.88rem;
+      margin-top: 2px;
+    }
+
+    .badge {
+      font-size: 0.75rem;
+      color: var(--accent);
+      border: 1px solid rgba(62, 224, 176, 0.35);
+      background: rgba(62, 224, 176, 0.08);
+      padding: 6px 10px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.03), transparent 28%), var(--bg-card);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .section-title {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--muted);
+      margin-bottom: 14px;
+    }
+
+    .samples {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      background: var(--bg-elev);
+      color: var(--text);
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .chip:hover { border-color: var(--accent-2); }
+
+    form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px 12px;
+    }
+
+    label {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.82rem;
+      color: var(--muted);
+    }
+
+    label.span-2 { grid-column: 1 / -1; }
+
+    input, select {
+      background: #0f1830;
+      border: 1px solid var(--line);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font: inherit;
+      outline: none;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent-2);
+      box-shadow: 0 0 0 3px rgba(122, 162, 255, 0.15);
+    }
+
+    input:disabled {
+      opacity: 0.85;
+      color: var(--accent);
+    }
+
+    .actions {
+      grid-column: 1 / -1;
+      display: flex;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    button {
+      font: inherit;
+      cursor: pointer;
+      border: 0;
+      border-radius: 12px;
+      padding: 12px 16px;
+    }
+
+    .primary {
+      background: linear-gradient(180deg, #4af0c0, #22c99a);
+      color: #062018;
+      font-weight: 600;
+      flex: 1;
+    }
+
+    .primary:disabled { opacity: 0.6; cursor: wait; }
+
+    .ghost {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--line);
+    }
+
+    .result {
+      min-height: 520px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .idle, .error {
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    .error { color: var(--danger); }
+
+    .gauge-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 12px 0 8px;
+    }
+
+    .gauge {
+      width: 220px;
+      height: 220px;
+    }
+
+    .score-label {
+      margin-top: -28px;
+      text-align: center;
+    }
+
+    .score-label strong {
+      display: block;
+      font-size: 1.7rem;
+      letter-spacing: -0.04em;
+    }
+
+    .verdict {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+      background: rgba(15, 24, 48, 0.7);
+    }
+
+    .verdict h3 { font-size: 1.05rem; margin-bottom: 6px; }
+    .verdict p { color: var(--muted); font-size: 0.9rem; line-height: 1.5; }
+
+    .metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .metric {
+      background: #0f1830;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .metric span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.75rem;
+      margin-bottom: 4px;
+    }
+
+    .metric b {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.95rem;
+    }
+
+    .approve { color: var(--ok); }
+    .reject { color: var(--danger); }
+    .watch { color: var(--warn); }
+
+    footer {
+      margin-top: 22px;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    @media (max-width: 900px) {
+      .layout, form, .metrics { grid-template-columns: 1fr; }
+      header { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <div class="logo">CR</div>
+        <div>
+          <h1>CreditRiskML</h1>
+          <p>XGBoost tabanlı kredi temerrüt olasılığı skoru</p>
+        </div>
+      </div>
+      <div class="badge">POST /predict · FastAPI</div>
+    </header>
+
+    <div class="layout">
+      <section class="card">
+        <div class="section-title">Başvuru özellikleri</div>
+        <div class="samples">
+          <button type="button" class="chip" data-sample="low">Düşük risk örneği</button>
+          <button type="button" class="chip" data-sample="mid">Orta risk örneği</button>
+          <button type="button" class="chip" data-sample="high">Yüksek risk örneği</button>
+        </div>
+
+        <form id="risk-form" novalidate>
+          <label>
+            Yaş
+            <input type="number" name="person_age" min="18" max="100" required />
+          </label>
+          <label>
+            Yıllık gelir
+            <input type="number" name="person_income" min="0" required />
+          </label>
+          <label>
+            Konut durumu
+            <select name="person_home_ownership" required>
+              <option value="RENT">Kira</option>
+              <option value="OWN">Mülk</option>
+              <option value="MORTGAGE">İpotek</option>
+              <option value="OTHER">Diğer</option>
+            </select>
+          </label>
+          <label>
+            Çalışma süresi (yıl)
+            <input type="number" name="person_emp_length" min="0" max="50" step="0.1" required />
+          </label>
+          <label>
+            Kredi amacı
+            <select name="loan_intent" required>
+              <option value="PERSONAL">Kişisel</option>
+              <option value="EDUCATION">Eğitim</option>
+              <option value="MEDICAL">Sağlık</option>
+              <option value="VENTURE">Girişim</option>
+              <option value="HOMEIMPROVEMENT">Konut iyileştirme</option>
+              <option value="DEBTCONSOLIDATION">Borç birleştirme</option>
+            </select>
+          </label>
+          <label>
+            Kredi notu (grade)
+            <select name="loan_grade" required>
+              <option>A</option>
+              <option>B</option>
+              <option>C</option>
+              <option>D</option>
+              <option>E</option>
+              <option>F</option>
+              <option>G</option>
+            </select>
+          </label>
+          <label>
+            Kredi tutarı
+            <input type="number" name="loan_amnt" min="0" required />
+          </label>
+          <label>
+            Faiz oranı (%)
+            <input type="number" name="loan_int_rate" min="0" max="40" step="0.01" required />
+          </label>
+          <label>
+            Kredi / gelir oranı
+            <input type="number" name="loan_percent_income" min="0" max="1" step="0.01" required />
+          </label>
+          <label>
+            Geçmiş temerrüt kaydı
+            <select name="cb_person_default_on_file" required>
+              <option value="N">Hayır</option>
+              <option value="Y">Evet</option>
+            </select>
+          </label>
+          <label class="span-2">
+            Kredi geçmişi uzunluğu (yıl)
+            <input type="number" name="cb_person_cred_hist_length" min="0" max="30" required />
+          </label>
+          <div class="actions">
+            <button type="submit" class="primary" id="submit-btn">Risk skorunu hesapla</button>
+            <button type="reset" class="ghost">Temizle</button>
+          </div>
+        </form>
+      </section>
+
+      <aside class="card result" id="result-panel">
+        <div class="section-title">Model çıktısı</div>
+        <div class="idle" id="idle-state">
+          Formu doldurup gönderin. Model <b>loan_status = 1</b> için temerrüt olasılığını ve eşiklenmiş sınıfı döndürür.
+        </div>
+      </aside>
+    </div>
+
+    <footer>
+      Kaggle Credit Risk Dataset · FastAPI + XGBoost (TunedThresholdClassifierCV)
+    </footer>
+  </div>
+
+  <script>
+    const form = document.getElementById("risk-form");
+    const resultPanel = document.getElementById("result-panel");
+    const submitBtn = document.getElementById("submit-btn");
+    const incomeInput = form.person_income;
+    const amountInput = form.loan_amnt;
+    const ratioInput = form.loan_percent_income;
+
+    const samples = {
+      low: {
+        person_age: 35,
+        person_income: 98000,
+        person_home_ownership: "MORTGAGE",
+        person_emp_length: 8,
+        loan_intent: "EDUCATION",
+        loan_grade: "A",
+        loan_amnt: 8000,
+        loan_int_rate: 7.49,
+        loan_percent_income: 0.08,
+        cb_person_default_on_file: "N",
+        cb_person_cred_hist_length: 12
+      },
+      mid: {
+        person_age: 27,
+        person_income: 42000,
+        person_home_ownership: "RENT",
+        person_emp_length: 3,
+        loan_intent: "PERSONAL",
+        loan_grade: "C",
+        loan_amnt: 10000,
+        loan_int_rate: 13.48,
+        loan_percent_income: 0.24,
+        cb_person_default_on_file: "N",
+        cb_person_cred_hist_length: 5
+      },
+      high: {
+        person_age: 22,
+        person_income: 59000,
+        person_home_ownership: "RENT",
+        person_emp_length: 4,
+        loan_intent: "PERSONAL",
+        loan_grade: "D",
+        loan_amnt: 35000,
+        loan_int_rate: 16.02,
+        loan_percent_income: 0.59,
+        cb_person_default_on_file: "Y",
+        cb_person_cred_hist_length: 3
+      }
+    };
+
+    function fillForm(data) {
+      Object.entries(data).forEach(([key, value]) => {
+        form.elements[key].value = value;
+      });
+    }
+
+    document.querySelectorAll("[data-sample]").forEach((btn) => {
+      btn.addEventListener("click", () => fillForm(samples[btn.dataset.sample]));
+    });
+
+    function updateRatio() {
+      const income = Number(incomeInput.value);
+      const amount = Number(amountInput.value);
+      if (income > 0 && amount >= 0) {
+        ratioInput.value = (amount / income).toFixed(2);
+      }
+    }
+
+    incomeInput.addEventListener("input", updateRatio);
+    amountInput.addEventListener("input", updateRatio);
+
+    function riskBand(probability) {
+      if (probability < 0.2) return { key: "approve", title: "Düşük risk", text: "Temerrüt olasılığı düşük. Koşullu onay için uygun görünebilir." };
+      if (probability < 0.45) return { key: "watch", title: "Orta risk", text: "İnceleme ve ek teminat / daha sıkı koşullar önerilir." };
+      return { key: "reject", title: "Yüksek risk", text: "Temerrüt olasılığı yüksek. Red veya ciddi kısıtlama senaryosu." };
+    }
+
+    function gaugeSVG(probability) {
+      const pct = Math.max(0, Math.min(1, probability));
+      const angle = pct * 270 - 135;
+      const color = pct < 0.2 ? "#3ee0b0" : pct < 0.45 ? "#ffb020" : "#ff5d73";
+      return `
+        <svg class="gauge" viewBox="0 0 220 220" aria-hidden="true">
+          <circle cx="110" cy="110" r="84" fill="none" stroke="rgba(180,205,255,0.12)" stroke-width="16" />
+          <circle cx="110" cy="110" r="84" fill="none" stroke="${color}" stroke-width="16"
+            stroke-linecap="round" stroke-dasharray="${pct * 528} 528" transform="rotate(-90 110 110)" />
+          <text x="110" y="118" text-anchor="middle" fill="#e8eefc" font-size="28" font-weight="700">${(pct * 100).toFixed(1)}%</text>
+        </svg>
+      `;
+    }
+
+    function renderResult({ prediction, probability }) {
+      const band = riskBand(probability);
+      const classLabel = prediction === 1 ? "Temerrüt (1)" : "Ödeme (0)";
+      resultPanel.innerHTML = `
+        <div class="section-title">Model çıktısı</div>
+        <div class="gauge-wrap">
+          ${gaugeSVG(probability)}
+          <div class="score-label">
+            <strong class="${band.key}">${band.title}</strong>
+          </div>
+        </div>
+        <div class="verdict">
+          <h3 class="${band.key}">${prediction === 1 ? "Riskli başvuru" : "Düşük temerrüt tahmini"}</h3>
+          <p>${band.text}</p>
+        </div>
+        <div class="metrics">
+          <div class="metric">
+            <span>Sınıf tahmini</span>
+            <b>${classLabel}</b>
+          </div>
+          <div class="metric">
+            <span>P(default)</span>
+            <b>${probability.toFixed(4)}</b>
+          </div>
+        </div>
+      `;
+    }
+
+    form.addEventListener("reset", () => {
+      resultPanel.innerHTML = `
+        <div class="section-title">Model çıktısı</div>
+        <div class="idle">Formu doldurup gönderin. Model <b>loan_status = 1</b> için temerrüt olasılığını ve eşiklenmiş sınıfı döndürür.</div>
+      `;
+    });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const payload = {
+        person_age: Number(form.person_age.value),
+        person_income: Number(form.person_income.value),
+        person_home_ownership: form.person_home_ownership.value,
+        person_emp_length: Number(form.person_emp_length.value),
+        loan_intent: form.loan_intent.value,
+        loan_grade: form.loan_grade.value,
+        loan_amnt: Number(form.loan_amnt.value),
+        loan_int_rate: Number(form.loan_int_rate.value),
+        loan_percent_income: Number(form.loan_percent_income.value),
+        cb_person_default_on_file: form.cb_person_default_on_file.value,
+        cb_person_cred_hist_length: Number(form.cb_person_cred_hist_length.value)
+      };
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Hesaplanıyor...";
+
+      try {
+        const response = await fetch("/predict", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          const detail = await response.text();
+          throw new Error(detail || "Tahmin alınamadı.");
+        }
+
+        const data = await response.json();
+        renderResult(data);
+      } catch (error) {
+        resultPanel.innerHTML = `
+          <div class="section-title">Model çıktısı</div>
+          <p class="error">${error.message}</p>
+        `;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Risk skorunu hesapla";
+      }
+    });
+
+    fillForm(samples.mid);
+  </script>
+</body>
+</html>
